@@ -1,0 +1,10 @@
+# Environment veriables
+
+# Python stuff
+__pycache__/
+
+# SQLite database
+*.sqlite3
+
+# VSCode
+.vscode/
