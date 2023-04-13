@@ -5,4 +5,4 @@ from message.models import Message
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    exclude = ["is_read"]
+    list_display = ["text", "is_read", "sender"]

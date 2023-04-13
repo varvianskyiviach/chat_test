@@ -20,7 +20,7 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
-LOCAL_APPS = ["users", "thread", "message", "authentication"]
+LOCAL_APPS = ["users", "thread", "message", "authentication", "shared"]
 
 THIRD_PARTY_APPS = ["rest_framework", "rest_framework_simplejwt"]
 

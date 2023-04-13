@@ -2,15 +2,17 @@ from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ModelViewSet
 
+from shared.django import CustomPagination, ResponceMultiSerializer, ResponceSerializer
 from thread.models import Thread
 from thread.serializers import ThreadSerializer
 from users.models import User
 
 
-class ThreadAPISet(ViewSet):
+class ThreadAPISet(ModelViewSet):
     serializer_class = ThreadSerializer
+    pagination_class = CustomPagination
 
     def create(self, request):
         participants_ids = request.data.get("participants", [])
@@ -30,23 +32,37 @@ class ThreadAPISet(ViewSet):
 
         if thread:
             serializer = self.serializer_class(thread)
-            response = {"result": serializer.data}
-            return JsonResponse(response, status=status.HTTP_200_OK)
+            response = ResponceSerializer({"result": serializer.data})
+
+            return JsonResponse(response.data, status=status.HTTP_200_OK)
         else:
             thread = Thread.objects.create()
             for participant in participants:
                 thread.participants.add(participant.id)
             serializer = self.serializer_class(thread)
-            response = {"result": serializer.data}
-            return JsonResponse(response, status=status.HTTP_201_CREATED)
+            response = ResponceSerializer({"result": serializer.data})
+
+            return JsonResponse(response.data, status=status.HTTP_201_CREATED)
+
+    def list(
+        self,
+        request,
+    ):
+        queryset = Thread.objects.all()
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.serializer_class(queryset, many=True)
+        response = ResponceMultiSerializer({"results": serializer.data})
+
+        return JsonResponse(response.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk):
         thread = get_object_or_404(Thread, pk=pk)
         thread.delete()
-        return JsonResponse({}, status=status.HTTP_204_NO_CONTENT)
 
-    def list(self, request):
-        thread = Thread.objects.all()
-        serializer = self.serializer_class(thread, many=True)
-        response = {"results": serializer.data}
-        return JsonResponse(response, status=status.HTTP_200_OK)
+        return JsonResponse({}, status=status.HTTP_204_NO_CONTENT)
